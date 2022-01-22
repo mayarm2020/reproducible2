@@ -5,12 +5,27 @@ date: "1/22/2022"
 output: html_document
 ---
 
+Peer Graded Assignment Course Project 2
+
+Title: Analysis of weather data
+
+Synopsis: Analysis of weather data (Storms and other severe weather events)
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+
+Data Processing
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
+
+Read the data in
+
 ```{r}
+
 
 
 # first clean the environment and setup the working directory
 rm(list= ls())
-setwd("c:/repres-assignmet2")
+
 
 # now download file
 if (!file.exists("StormData.csv.bz2")) {
@@ -18,28 +33,91 @@ if (!file.exists("StormData.csv.bz2")) {
     download.file(fileURL, destfile='StormData.csv.bz2', method = 'curl')
 }
 noaaDF <- read.csv(bzfile('StormData.csv.bz2'),header=TRUE, stringsAsFactors = FALSE)
-}
-noaaDF <- read.csv(bzfile('StormData.csv.bz2'),header=TRUE, stringsAsFactors = FALSE)
+
+```
+
+
+load the various needed packages
+
+```{r}
+
+## Loading required package: dplyr
+## 
+## Attaching package: 'dplyr'
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
 
 require(dplyr)
 
+require(tidyr)
+
+## Loading required package: tidyr
+require(lubridate)
+## Loading required package: lubridate
+## 
+## Attaching package: 'lubridate'
+## The following object is masked from 'package:base':
+## 
+##     date
+
+
 require(ggplot2)
+## Loading required package: ggplot2
+
+``` 
+
+
+preliminary analysis
+First a summary of the NU.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database:
+
+
+```{r}
+
 
 summary(noaaDF)
 
 str(noaaDF)
+```
+
+1: address the question of which types of events are most harmful to population health
+Calculate the fatalities and injuries seperately
+
+The fatalities:
+
+Results
+
+```{r}
+
+
+
+
 
 totFatalities <- aggregate(noaaDF$FATALITIES, by = list(noaaDF$EVTYPE), "sum")
 names(totFatalities) <- c("Event", "Fatalities")
 totFatalitiesSorted <- totFatalities[order(-totFatalities$Fatalities), ][1:20, ]
 totFatalitiesSorted
 
+```
 
+
+The injuries:
+
+```{r}
 totInjuries <- aggregate(noaaDF$INJURIES, by = list(noaaDF$EVTYPE), "sum")
 names(totInjuries) <- c("Event", "Injuries")
 totInjuriesSorted <- totInjuries[order(-totInjuries$Injuries), ][1:20, ]
 totInjuriesSorted
 
+```
+
+Finally plot both the fatalities and injuries in a single plot:
+
+
+```{r}
 
 par(mfrow = c(1, 2), mar = c(10, 4, 2, 2), las = 3, cex = 0.7, cex.main = 1.4, cex.lab = 1.2)
 barplot(totFatalitiesSorted$Fatalities, names.arg = totFatalitiesSorted$Event, col = 'red',
@@ -47,16 +125,40 @@ barplot(totFatalitiesSorted$Fatalities, names.arg = totFatalitiesSorted$Event, c
 barplot(totInjuriesSorted$Injuries, names.arg = totInjuriesSorted$Event, col = 'orange',
         main = 'Top 20 Weather Events for Injuries', ylab = 'Number of Injuries')
 
+
+```
+
+
+Thus we see that Tornados cause most deaths and injuries in the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database. But Excessive heat causes second most deaths, whereas as far as injuries are conserned second to fourth causes have very similar values.
+address the question of which types of events have the greatest economic consequences
+Calculate the cost of property and crop damages seperately
+The property:
+
+```{r}
+
 totProperty <- aggregate(noaaDF$PROPDMG, by = list(noaaDF$EVTYPE), "sum")
 names(totProperty) <- c("Event", "Property")
 totPropertySorted <- totProperty[order(-totProperty$Property), ][1:20, ]
 totPropertySorted
 
+```
+
+
+
+The crop:
+
+```{r}
 totCrop <- aggregate(noaaDF$CROPDMG, by = list(noaaDF$EVTYPE), "sum")
 names(totCrop) <- c("Event", "Crop")
 totCropSorted <- totCrop[order(-totCrop$Crop), ][1:20, ]
 totCropSorted
 
+
+```
+
+Next plot both the cost of property and crop damages in a single plot:
+
+```{r}
 par(mfrow = c(1, 2), mar = c(10, 4, 2, 2), las = 3, cex = 0.7, cex.main = 1.4, cex.lab = 1.2)
 barplot(totPropertySorted$Property, names.arg = totPropertySorted$Event, col = 'Brown',
         main = 'Top 20 Weather Events for Property Damage ', ylab = 'Amount of Property Damage', ylim = c(0, 3500000))
@@ -66,3 +168,47 @@ barplot(totCropSorted$Crop, names.arg = totCropSorted$Event, col = 'Green',
 
 
 ```
+
+
+
+Finally the totl damage by adding both costs (property and crop damage)
+
+```{r}
+totTotalCost <- aggregate(noaaDF$CROPDMG+noaaDF$PROPDMG, by = list(noaaDF$EVTYPE), "sum")
+names(totTotalCost) <- c("Event", "TotalCost")
+totTotalCostSorted <- totTotalCost[order(-totTotalCost$TotalCost), ][1:20, ]
+totTotalCostSorted
+
+```
+
+
+And a single plot
+```{r}
+
+par(mfrow = c(1,1), mar = c(10, 4, 2, 2), las = 3, cex = 0.7, cex.main = 1.4, cex.lab = 1.2)
+barplot(totTotalCostSorted$TotalCost, names.arg = totTotalCostSorted$Event, col = 'Black',
+        main = 'Top 20 Weather Events for total Damage ', ylab = 'Amount of total Damage', ylim = c(0, 3500000))
+
+```
+
+Thus we notice that tornadoes cause most total damage.
+the Problem
+Instructions Introduction
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage. 
+
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
+
+[Storm data](Storm Data)
+
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
+
+
+[National Weather Service](Storm Data Documentation) 
+[National Climatic Data Center Storm Events](FAQ)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete. Review criteria
+
+
